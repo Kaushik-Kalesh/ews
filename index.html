@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Component Price Tracker</title>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #4cc9f0;
+
+      --bg: #f5f7fa;
+      --text-color: var(--dark);
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text-color: #e9ecef;
+      --card-bg: #1e1e1e;
+      --input-bg: #2a2a2a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+      font-size: 1.8rem;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    #partNumber {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 16px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+    }
+
+    #partNumber:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    #results {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .price-result {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .best-price {
+      background-color: rgba(76, 201, 240, 0.1);
+      border-left: 4px solid var(--success);
+    }
+
+    .price-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 10px 0;
+    }
+
+    .vendor-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .quantity {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary);
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      color: #dc3545;
+      background-color: #f8d7da;
+      padding: 12px 15px;
+      border-radius: 6px;
+    }
+
+    .empty-state {
+      color: #6c757d;
+      font-style: italic;
+      text-align: center;
+    }
+
+    body.dark .empty-state {
+      color: #aaa;
+    }
+
+    /* Dark mode toggle floating button */
+    .dark-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, background-color 0.3s;
+    }
+
+    .dark-toggle-btn:hover {
+      background-color: var(--secondary);
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Electronic Parts Price Tracker</h1>
+
+    <div class="search-box">
+      <input 
+        type="text" 
+        id="partNumber" 
+        placeholder="e.g. STM32F103C8T6, INA950-SEP"
+        autofocus
+      />
+      <button onclick="searchPrice()">Search</button>
+    </div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <p>Fetching prices...</p>
+    </div>
+
+    <div id="results">
+      <p class="empty-state">Enter a part number to compare prices across distributors</p>
+    </div>
+  </div>
+
+  <!-- Dark mode floating button -->
+  <button class="dark-toggle-btn" id="darkToggle" title="Toggle Dark Mode">🌙</button>
+
+  <script>
+    // Dark mode floating toggle logic
+    const darkBtn = document.getElementById("darkToggle");
+    const body = document.body;
+
+    function updateDarkIcon() {
+      darkBtn.textContent = body.classList.contains("dark") ? "🌞" : "🌙";
+    }
+
+    function toggleDarkMode() {
+      body.classList.toggle("dark");
+      localStorage.setItem("darkMode", body.classList.contains("dark") ? "true" : "false");
+      updateDarkIcon();
+    }
+
+    darkBtn.addEventListener("click", toggleDarkMode);
+
+    // Load stored theme on startup
+    window.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("darkMode");
+      if (saved === "true") {
+        body.classList.add("dark");
+      }
+      updateDarkIcon();
+    });
+
+    async function searchPrice() {
+    const partNumber = document.getElementById("partNumber").value.trim();
+    const resultsDiv = document.getElementById("results");
+    const loader = document.getElementById("loader");
+
+    if (!partNumber) {
+      resultsDiv.innerHTML = `<div class="error">Please enter a part number</div>`;
+      return;
+    }
+
+    loader.style.display = 'block';
+    resultsDiv.innerHTML = '';
+
+    try {
+      const response = await fetch(`http://localhost:5000/search?part_no=${encodeURIComponent(partNumber)}`);
+      const data = await response.json();
+
+      if (data.error) {
+        resultsDiv.innerHTML = `<div class="error">${data.error}</div>`;
+        return;
+      }
+
+      let html = '';
+      let found = Array.isArray(data) && data.length > 0;
+
+      // If data is an array of offers
+      if (found) {                
+        data.forEach(offer => {
+          html += `
+            <div class="price-result${offer.is_best ? ' best-price' : ''}">
+              <div class="vendor-name"><a href="${offer.url}" target="_blank">${offer.site}</a></div>
+              <div class="price-value">${offer.currency} ${Number(offer.lowest_price).toFixed(2)}</div>
+              ${offer.is_best ? `<div style="color: var(--success); font-weight: 600;">Best Price</div>` : ''}
+            </div>
+          `;
+        });
+      } else {
+        html = `<div class="error">No prices found for ${partNumber}</div>`;
+      }
+
+      resultsDiv.innerHTML = html;
+    } catch (error) {
+      resultsDiv.innerHTML = `<div class="error">Failed to fetch prices. Check your connection.</div>`;
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  document.getElementById("partNumber").addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      searchPrice();
+    }
+  });
+  </script>
+</body>
+</html>
