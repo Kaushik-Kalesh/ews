@@ -262,7 +262,7 @@
     resultsDiv.innerHTML = '';
 
     try {
-      const response = await fetch(`http://localhost:5000/search?part_no=${encodeURIComponent(partNumber)}`);
+      const response = await fetch(`/search?part_no=${encodeURIComponent(partNumber)}`);
       const data = await response.json();
 
       if (data.error) {

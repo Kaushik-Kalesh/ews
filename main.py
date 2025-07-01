@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import requests
 from urllib.parse import quote
@@ -12,7 +12,7 @@ load_dotenv()
 
 @app.route("/")
 def home():
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
 def print_error(e):
     """
@@ -359,8 +359,7 @@ def search():
             get_digikey(part_no),
             get_arrow(part_no),
             # get_lcsc(part_no),
-        ]
-        print(offers[1])
+        ]        
 
         # Filter out None offers
         valid_offers = [offer for offer in offers if offer]
@@ -386,7 +385,8 @@ def search():
         return jsonify({
             "error": str(e),
         })
-    
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
